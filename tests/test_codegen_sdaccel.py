@@ -7,8 +7,8 @@ import heterocl as hcl
 def test_pragma():
 	hcl.init(hcl.Float())
 	A = hcl.placeholder((10, 32), "A")
-	B = hcl.placeholder((10, 32))
-	C = hcl.compute(A.shape, lambda i, j: A[i][j] + B[i][j])
+	B = hcl.placeholder((10, 32), "B")
+	C = hcl.compute(A.shape, lambda i, j: A[i][j] + B[i][j], "C")
 
 	# unroll
 	s1 = hcl.create_schedule([A, B, C])
@@ -30,7 +30,7 @@ def test_pragma():
 	code3 = hcl.build(s3, target='sdaccel')
 	print (code3)
 	assert "__attribute__((xcl_array_partition(block,2,2)))" in code3
-	
+
 
 if __name__ == "__main__":
 	test_pragma()

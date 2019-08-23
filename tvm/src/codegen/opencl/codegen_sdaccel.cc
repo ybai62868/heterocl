@@ -246,7 +246,7 @@ void CodeGenSDACCEL::PrintType(Type t, std::ostream& os) {  // NOLINT(*)
       case 16: os << "short"; break;
       case 32: os << "int"; break;
       case 64: os << "long"; break;
-      case 1: os << "int"; break;
+      // case 1: os << "int"; break;
       default: fail = true; break;
     }
     if (!fail && lanes == 1) return;
