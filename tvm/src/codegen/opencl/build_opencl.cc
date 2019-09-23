@@ -1,14 +1,7 @@
-/*
-    Yang.Bai
-    yb269@cornell.edu
-*/
-
 #include "./codegen_aocl.h"
 #include "./codegen_sdaccel.h"
 #include "../build_common.h"
 #include "./sdaccel_module.h"
-
-
 
 namespace TVM {
 namespace codegen {
@@ -36,7 +29,6 @@ TVM_REGISTER_API("codegen.build_sdaccel_csim")
   });
 #endif
 
-
 template<class CodeGen>
 std::string BuildOpenCL(Array<LoweredFunc> funcs){
     using TVM::runtime::Registry;
@@ -54,8 +46,6 @@ std::string BuildOpenCL(Array<LoweredFunc> funcs){
     LOG(WARNING) << "OpenCL doesn't have runtime, return kernel code";
     return code;
 }
-
-
 
 
 TVM_REGISTER_API("codegen.build_sdaccel")

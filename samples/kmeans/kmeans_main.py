@@ -83,7 +83,7 @@ f = top()
 # with open('vhls_code.cl', 'w') as f:
 #     f.write(code3)
 code = top('aocl')
-with open('kmeans_aocl.cl', 'w') as f:
+with open('kmeans_aocl_2.cl', 'w') as f:
     f.write(code)
 assert 1==2
 

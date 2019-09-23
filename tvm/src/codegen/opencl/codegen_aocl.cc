@@ -1,7 +1,3 @@
-/*
-    Yang.Bai
-    yb269@cornell.edu
-*/
 # include <regex>
 # include <tvm/runtime/config.h>
 # include <tvm/packed_func_ext.h>
@@ -26,7 +22,6 @@ void CodeGenAOCL::AddFunction(LoweredFunc f,
   for (const auto & kv : f->handle_data_type) {
     RegisterHandleType(kv.first.get(), kv.second.type());
   }
-
 
   this->stream << "#include \"ihc_apint.h\"" << "\n";
   this->stream << "__kernel " << "void " << f->name << "(";
@@ -61,53 +56,6 @@ void CodeGenAOCL::AddFunction(LoweredFunc f,
   this->stream << "}\n\n";
 }
 
-/*  1st edition
-void CodeGenAOCL::PrintType(Type t, std::ostream& os) {  // NOLINT(*)
-  CHECK_EQ(t.lanes(), 1)
-      << "do not yet support vector types";
-  if (t.is_handle()) {
-    os << "void*"; return;
-  }
-
-  if (t.is_uint() || t.is_int()) {
-    if (t.is_uint()) {
-      os << "ap_uint<" << t.bits() << ">" <<" "<<"uint"<<t.bits()<<"_t";
-    }
-    else if ( t.is_int()) {
-      os << "ap_int<" << t.bits() << "> "<<"int"<<t.bits()<<"_t" ;
-    }
-    else {
-      if (t.is_float()) {
-        if (t.bits() == 16) {
-          enable_fp16_ = true;
-          os << "half"; return;
-        }
-        if (t.bits() == 32) {
-          os << "float"; return;
-        }
-        if (t.bits() == 64) {
-          enable_fp64_ = true;
-          os << "double"; return;
-        }
-      } else if (t.is_uint()) {
-        switch (t.bits()) {
-          case 8: case 16: case 32: case 64: {
-            os << "ap_uint<" << t.bits() << ">"<<" "<< "uint"<<t.bits()<<"_t"; return;
-            // os << "uint" << t.bits() << "_t"; return;
-          }
-          case 1: os << "int"; return;
-        }
-      } else if (t.is_int()) {
-        switch (t.bits()) {
-          case 8: case 16: case 32: case 64: {
-            os << "ap_int<" << t.bits() << "> "<<"int"<<t.bits()<<"_t" ; return; 
-            // os << "int" << t.bits() << "_t";  return;
-          }
-        }
-      }
-    }
-  }
-}*/
 
 void CodeGenAOCL::PrintType(Type t, std::ostream &os)
 {
@@ -131,14 +79,14 @@ void CodeGenAOCL::PrintType(Type t, std::ostream &os)
     {
       case 16:
         os<<"half";
-        // enable_fp16_ = true;
+        enable_fp16_ = true;
         break;
       case 32:
         os<<"float";
         break;
       case 64:
         os<< "double";
-        // enable_fp64_ = true;
+        enable_fp64_ = true;
         break;
       default:
         fail = true;
@@ -189,8 +137,15 @@ void CodeGenAOCL::PrintType(Type t, std::ostream &os)
       }
     }
   }
-
   LOG(FATAL) << "Cannot convert type"<<t<<"to AOCL type";
+}
+
+
+void CodeGenAOCL::PrintStorageScope(
+    const std::string& scope, std::ostream& os) { // NOLINT(*)
+  if (scope == "global" || scope == "shared") {
+    os << "";
+  }
 }
 
 
@@ -231,9 +186,6 @@ void CodeGenAOCL::VisitStmt_(const For* op) {
   }
   CodeGenAOCL::GenForStmt(op, os.str(), true);
 }
-
-
-
 
 } // namespace codegen
 } // namespace TVM

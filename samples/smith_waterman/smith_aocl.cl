@@ -1,5 +1,5 @@
 #include "ihc_apint.h"
-__kernel void default_function(__global uint* restrict seqAs, __global uint* restrict seqBs, __global uint* restrict outAs, __global uint* restrict outBs) {
+__kernel void default_function(__global uint3_t* restrict seqAs, __global uint3_t* restrict seqBs, __global uint3_t* restrict outAs, __global uint3_t* restrict outBs) {
   int B;
   #pragma ii 1
   for (int t_outer = 0; t_outer < 2; ++t_outer) {

@@ -29,26 +29,12 @@ std::string CodeGenOpenCL::Finish() {
   // inject extension enable pragma for fp16 and fp64
   if (enable_fp16_) {
     decl_stream
-        << "#ifdef cl_khr_fp16\n"
-           "#pragma OPENCL EXTENSION cl_khr_fp16 : enable\n"
-           "#elif defined(cl_amd_fp16)\n"
-           "#pragma OPENCL EXTENSION cl_amd_fp16 : enable\n"
-           "#else\n"
-           "#error \"Half precision floating point not supported"
-                    "by OpenCL implementation on your device.\" \n"
-           "#endif\n\n";
+        << "#pragma OPENCL EXTENSION cl_khr_fp16 : enable\n";
   }
 
   if (enable_fp64_) {
     decl_stream
-        << "#ifdef cl_khr_fp64\n"
-           "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-           "#elif defined(cl_amd_fp64)\n"
-           "#pragma OPENCL EXTENSION cl_amd_fp64 : enable\n"
-           "#else\n"
-           "#error \"Double precision floating point not supported"
-                    "by OpenCL implementation on your device.\" \n"
-           "#endif\n\n";
+        << "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
   }
 
   return CodeGenC::Finish();
@@ -120,9 +106,9 @@ void CodeGenOpenCL::PrintStorageSync(const Call* op) {
 void CodeGenOpenCL::PrintStorageScope(
     const std::string& scope, std::ostream& os) { // NOLINT(*)
   if (scope == "global") {
-    // os << "global ";
+    os << "global ";
   } else if (scope == "shared") {
-    // os << "local ";
+    os << "local ";
   }
 }
 

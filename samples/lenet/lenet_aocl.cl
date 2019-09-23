@@ -1,3 +1,4 @@
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #include "ihc_apint.h"
 __kernel void default_function(__global float* restrict input_image, __global float* restrict weight_conv1, __global float* restrict weight_conv2, __global float* restrict weight_fc1, __global float* restrict weight_fc2, __global float* restrict lenet) {
   float conv2d;
@@ -19,7 +20,7 @@ __kernel void default_function(__global float* restrict input_image, __global fl
   for (int args = 0; args < 1; ++args) {
     for (int args1 = 0; args1 < -1; ++args1) {
       for (int args2 = 0; args2 < -1; ++args2) {
-        tanh1 = ((float)tanh(((float)conv2d)));
+        tanh1 = ((float)tanh(((double)conv2d)));
       }
     }
   }
@@ -60,7 +61,7 @@ __kernel void default_function(__global float* restrict input_image, __global fl
     for (int args0 = 0; args0 < 10; ++args0) {
       for (int args11 = 0; args11 < -5; ++args11) {
         for (int args21 = 0; args21 < -5; ++args21) {
-          tanh2[(((args21 - (args11 * 5)) + (args0 * 25)) + (args3 * 250))] = ((float)tanh(((float)conv2d1[(((args21 - (args11 * 5)) + (args0 * 25)) + (args3 * 250))])));
+          tanh2[(((args21 - (args11 * 5)) + (args0 * 25)) + (args3 * 250))] = ((float)tanh(((double)conv2d1[(((args21 - (args11 * 5)) + (args0 * 25)) + (args3 * 250))])));
         }
       }
     }
@@ -102,7 +103,7 @@ __kernel void default_function(__global float* restrict input_image, __global fl
   float tanh3[25];
   for (int args4 = 0; args4 < 1; ++args4) {
     for (int args01 = 0; args01 < 25; ++args01) {
-      tanh3[(args01 + (args4 * 25))] = ((float)tanh(((float)dense[(args01 + (args4 * 25))])));
+      tanh3[(args01 + (args4 * 25))] = ((float)tanh(((double)dense[(args01 + (args4 * 25))])));
     }
   }
   float dense1[10];
@@ -117,22 +118,22 @@ __kernel void default_function(__global float* restrict input_image, __global fl
     }
   }
   float compute1;
-  int max1;
-  max1 = 0;
+  int max;
+  max = 0;
   for (int ra12 = 0; ra12 < 10; ++ra12) {
-    max1 = ((int)max(dense1[ra12], ((float)max1)));
+    max = ((int)max(dense1[ra12], ((float)max)));
   }
-  compute1 = ((float)max1);
+  compute1 = ((float)max);
   float compute2;
   int sum;
   sum = 0;
   for (int ra13 = 0; ra13 < 10; ++ra13) {
-    sum = ((int)(exp(((float)(dense1[ra13] - compute1))) + ((float)sum)));
+    sum = ((int)(exp(((double)(dense1[ra13] - compute1))) + ((double)sum)));
   }
   compute2 = ((float)sum);
   float update0;
   for (int j3 = 0; j3 < 10; ++j3) {
-    lenet[j3] = ((float)(exp(((float)(dense1[j3] - compute1))) / ((float)compute2)));
+    lenet[j3] = ((float)(exp(((double)(dense1[j3] - compute1))) / ((double)compute2)));
   }
 }
 

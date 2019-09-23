@@ -1,8 +1,3 @@
-/*
-    Yang.Bai
-    yb269@cornell.edu
-*/
-
 #ifndef TVM_CODEGEN_CODEGEN_AOCL_H_
 #define TVM_CODEGEN_CODEGEN_AOCL_H_
 
@@ -22,11 +17,9 @@ class CodeGenAOCL : public CodeGenOpenCL {
     	CodeGenAOCL(){}
         // void AddFunction(LoweredFunc f);
         void AddFunction(LoweredFunc f, str2tupleMap<std::string, Type> map_arg_type);
-
         void PrintType(Type t, std::ostream& os) override; //NOLINT(*)
-
-        void VisitStmt_(const For* op) override;
-  
+       	void PrintStorageScope(const std::string& scope, std::ostream& os) override; //NOLINT(*)
+        void VisitStmt_(const For* op) override; 
 };
 } // namespace codegen
 } // namespace TVM

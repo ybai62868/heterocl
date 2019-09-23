@@ -1,8 +1,3 @@
-/*
-    Yang.Bai
-    yb269@cornell.edu
-*/
-
 #include "./sdaccel_module.h"
 #include <fstream>
 #include <unistd.h>
@@ -24,7 +19,6 @@ void PrintIndent(std::ofstream& stream, int indent) {
 }
 
 
-
 inline size_t GetTypeSize(TVMType t) {
   size_t byte = (t.bits + 7) / 8;
   if (byte > 2){
@@ -34,7 +28,6 @@ inline size_t GetTypeSize(TVMType t) {
   }
   return byte;
 }
-
 
 
 inline size_t GetDataSize(TVMArray* arr) {
@@ -65,69 +58,12 @@ inline TVMType Type2TVMType(Type t) {
   return tt;
 }
 
-
-// inline std::string Type2Str(TVMType t) {
-//   std::string str = "";
-//   if (t.code == kDLInt) {
-//     if (t.fracs > 0) str += "ap_fixed<";
-//     else             str += "ap_int<";
-//     str += std::to_string(static_cast<int>(t.bits));
-//     if (t.fracs > 0) str += ", " + std::to_string(static_cast<int>(t.bits - t.fracs)) + ">";
-//     else             str += ">";
-//   } else if (t.code == kDLUInt) {
-//     if (t.fracs > 0) str += "ap_ufixed<";
-//     else             str += "ap_uint<";
-//     str += std::to_string(static_cast<int>(t.bits));
-//     if (t.fracs > 0) str += ", " + std::to_string(static_cast<int>(t.bits - t.fracs)) + ">";
-//     else             str += ">";
-//   } else if (t.code == kDLFloat) {
-//     str += "float";
-//   } else {
-//     LOG(FATAL) << "Unknown type";
-//   }
-//   return str;
-// }
-
 inline std::string Type2Str(TVMType t) {
   std::string str = "";
   if (t.code == kDLInt) {
     str += "int";
-    // if (t.fracs > 0) str += "ap_fixed<";
-    // else             str += "ap_int<";
-    // str += std::to_string(static_cast<int>(t.bits));
-    // if (t.fracs > 0) str += ", " + std::to_string(static_cast<int>(t.bits - t.fracs)) + ">";
-    // else             str += ">";
   } else if (t.code == kDLUInt) {
     str += "unsigned int";
-    // if (t.fracs > 0) str += "ap_ufixed<";
-    // else             str += "ap_uint<";
-    // str += std::to_string(static_cast<int>(t.bits));
-    // if (t.fracs > 0) str += ", " + std::to_string(static_cast<int>(t.bits - t.fracs)) + ">";
-    // else             str += ">";
-  } else if (t.code == kDLFloat) {
-    str += "float";
-  } else {
-    LOG(FATAL) << "Unknown type";
-  }
-  return str;
-}
-
-
-
-inline std::string Type2ExtStr(TVMType t) {
-  std::string str = "";
-  if (t.code == kDLInt) {
-    if (t.fracs > 0) str += "ap_fixed<";
-    else             str += "ap_int<";
-    str += std::to_string(static_cast<int>(t.bits + t.fracs));
-    if (t.fracs > 0) str += ", " + std::to_string(static_cast<int>(t.bits)) + ">";
-    else             str += ">";
-  } else if (t.code == kDLUInt) {
-    if (t.fracs > 0) str += "ap_ufixed<";
-    else             str += "ap_uint<";
-    str += std::to_string(static_cast<int>(t.bits + t.fracs));
-    if (t.fracs > 0) str += ", " + std::to_string(static_cast<int>(t.bits)) + ">";
-    else             str += ">";
   } else if (t.code == kDLFloat) {
     str += "float";
   } else {
@@ -147,7 +83,6 @@ inline std::string Type2Byte(TVMType t) {
     else if (t.bits <= 16) str += "16";
     else if (t.bits <= 32) str += "32";
     else                   str += "64";
-    // str += "_t";
   }
   return str;
 }
@@ -194,14 +129,6 @@ void FreeSharedMem(TVMArgs& args,
                    const std::vector<int>& shmids,
                    std::vector<size_t>& arg_sizes) {
   for (size_t i = 0; i < shmids.size(); i++) {
-    // if (args[i].type_code() == kArrayHandle) {
-    //   TVMArray* arr = args[i];
-    //   int shmid = shmids[i];
-    //   void* mem = shmat(shmid, nullptr, 0);
-    //   memcpy(arr->data, mem, arg_sizes[i]);
-    //   shmdt(mem);
-    //   shmctl(shmid, IPC_RMID, nullptr);
-    // }
       TVMArray* arr = args[i];
       int shmid = shmids[i];
       void* mem = shmat(shmid, nullptr, 0);
@@ -272,7 +199,6 @@ void PrintCopyBack(TVMArray* arr,
         stream << " + i" << j << "*" << mul;
       }
       stream << "] = ";
-      // stream << Type2ExtStr(arr->dtype);
       stream << "source_" << nth_arr;
       stream << "[i" << arr->ndim - 1;
       int mul2 = 1;
@@ -481,18 +407,6 @@ void GenHostCode(TVMArgs& args,
 
 
   // Source Memories
-  // std::vector<unsigned int> source_a(LENGTH);
-  // for (int i = 0;i < args.size();i++) {
-  //   PrintIndent(stream, indent);
-  //   stream << Type2Str(arg_types[i]) << " ";
-  //   stream << arg_types[i] << " ";
-  //   stream << "arg_" << i;
-  //   TVMArray* arr = args[i];
-  //   for (int j = 0;j < arr->ndim;j++) {
-  //     stream << "[" << arr->shape[j] << "]";
-  //   }
-  //   stream << ";\n";
-  // }
   for (int i = 0;i < args.size();i++) {
     PrintIndent(stream, indent);
     stream << "std::vector<" << Type2Str(arg_types[i]);
@@ -525,17 +439,6 @@ void GenHostCode(TVMArgs& args,
   stream << "\n";
 
   for (int i = 0;i < args.size();i++ ) {
-    // if (args[i].type_code() == kArrayHandle) {
-    //   // read from the shared memory
-    //   PrintIndent(stream, indent);
-    //   stream << Type2Str(arg_types[i]) << "* ";
-    //   stream << "arg_" << i << " = ";
-    //   stream << "(" << Type2Str(arg_types[i]) << "*)";
-    //   stream << "shmat(" << shmids[i] << ", nullptr, 0);\n";
-    //   TVMArray* arr = args[i];
-    //   // copy from shared mem  
-    //   PrintCopy(arr, stream, indent, i);
-    // }
       // read from the shared memory
       PrintIndent(stream, indent);
       stream << Type2Str(arg_types[i]) << "* ";
