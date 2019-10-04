@@ -33,6 +33,30 @@ TVM_REGISTER_API("codegen.build_vhls_csim")
   });
 #endif
 
+#if HCL_AWS_RUNTIME
+runtime::Module BuildVivadoHLSCSim(Array<LoweredFunc> funcs) {
+  CodeAnalysMerlinC ca;
+  CodeGenAWSHLS cg;
+  for (LoweredFunc f : funcs) {
+    // 1st pass: Analyze AST and collect necessary information
+    ca.AddFunction(f);
+    str2tupleMap<std::string, Type> map_arg_type;
+    map_arg_type = ca.Finish();
+    // 2nd pass: Generate kernel code
+    cg.AddFunction(f, map_arg_type);
+  }
+  std::string code = cg.Finish();
+  return runtime::CreateAWSHLSModule(funcs[0], code);
+}
+
+TVM_REGISTER_API("codegen.build_aws_csim")
+.set_body([](TVMArgs args, TVMRetValue* rv) {
+    *rv = BuildAWSHLSCSim(args[0]);
+  });
+#endif
+
+
+
 template<class CodeGen>
 std::string BuildHLSC(Array<LoweredFunc> funcs) {
   CodeAnalysMerlinC ca;
@@ -58,6 +82,10 @@ TVM_REGISTER_API("codegen.build_ihls")
 TVM_REGISTER_API("codegen.build_vhls")
 .set_body([](TVMArgs args, TVMRetValue* rv) {
     *rv = BuildHLSC<CodeGenVivadoHLS>(args[0]);
+  });
+TVM_REGISTER_API("codegen.build_aws")
+.set_body([](TVMArgs args, TVMRetValue* rv) {
+    *rv = BuildHLSC<CodeGenAWSHLS>(args[0]);
   });
 }  // namespace codegen
 }  // namespace TVM

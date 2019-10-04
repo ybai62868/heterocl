@@ -1,12 +1,16 @@
 #include "./codegen_aocl.h"
 #include "./codegen_sdaccel.h"
+#include "./codegen_aws.h"
 #include "../build_common.h"
 #include "./sdaccel_module.h"
+#include "./aocl_module.h"
+#include "./aws_module.h"
 
 namespace TVM {
 namespace codegen {
 
 
+// Xilinx FPGA OpenCL runtime
 #if HCL_SDACCEL_RUNTIME
 runtime::Module BuildSDAccelSim(Array<LoweredFunc> funcs) {
   CodeAnalysOpenCLC ca;
@@ -28,6 +32,31 @@ TVM_REGISTER_API("codegen.build_sdaccel_csim")
     *rv = BuildSDAccelSim(args[0]);
   });
 #endif
+
+
+// Intel FPGA OpenCL runtime
+#if HCL_AOCL_RUNTIME
+runtime::Module BuildAOCLSim(Array<LoweredFunc> funcs) {
+  CodeAnalysOpenCLC ca;
+  CodeGenAOCL cg;
+  for (LoweredFunc f : funcs) {
+    // 1st pass: Analyze AST and collect necessary information
+    ca.AddFunction(f);
+    str2tupleMap<std::string, Type> map_arg_type;
+    map_arg_type = ca.Finish();
+    // 2nd pass: Generate kernel code
+    cg.AddFunction(f, map_arg_type);
+  }
+  std::string code = cg.Finish();
+  return runtime::CreateAOCLModule(funcs[0], code);
+}
+
+TVM_REGISTER_API("codegen.build_aocl_csim")
+.set_body([](TVMArgs args, TVMRetValue* rv) {
+    *rv = BuildAOCLSim(args[0]);
+  });
+#endif
+
 
 template<class CodeGen>
 std::string BuildOpenCL(Array<LoweredFunc> funcs){
