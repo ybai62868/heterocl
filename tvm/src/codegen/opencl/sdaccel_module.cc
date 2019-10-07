@@ -616,11 +616,11 @@ class SDAccelModuleNode final : public ModuleNode {
         GenHostCode(args, shmids, arg_types, func_, test_file_);
 
         LOG(CLEAN) << "Creating a Common folder for common.mk ...";
-        system("mkdir common");
-        GenCommonFile();
+        // system("mkdir common");
+        // GenCommonFile();
 
         LOG(CLEAN) << "Creating a Makfile for compling the SDAccel OpenCL Code ...";
-        GenMakFile();
+        // GenMakFile();
         // TODO: find a better way to do the following
         LOG(CLEAN) << "Compiling the generated SDAccel OpenCL Code ...";
         // system("make -f ./sdaccel.mk run_cpu_em");

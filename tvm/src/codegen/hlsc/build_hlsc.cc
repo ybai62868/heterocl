@@ -5,7 +5,9 @@
  */
 #include "./codegen_ihls.h"
 #include "./codegen_vhls.h"
+#include "./codegen_aws.h"
 #include "./vhls_module.h"
+#include "./aws_module.h"
 #include "../build_common.h"
 
 namespace TVM {
@@ -33,8 +35,9 @@ TVM_REGISTER_API("codegen.build_vhls_csim")
   });
 #endif
 
-#if HCL_AWS_RUNTIME
-runtime::Module BuildVivadoHLSCSim(Array<LoweredFunc> funcs) {
+
+// #if HCL_AWS_RUNTIME
+runtime::Module BuildAWSHLSCSim(Array<LoweredFunc> funcs) {
   CodeAnalysMerlinC ca;
   CodeGenAWSHLS cg;
   for (LoweredFunc f : funcs) {
@@ -53,7 +56,7 @@ TVM_REGISTER_API("codegen.build_aws_csim")
 .set_body([](TVMArgs args, TVMRetValue* rv) {
     *rv = BuildAWSHLSCSim(args[0]);
   });
-#endif
+// #endif
 
 
 

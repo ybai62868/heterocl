@@ -79,12 +79,12 @@ void CodeGenHLSC::AddFunctionAWS(LoweredFunc f,
     if (i != 0) this->stream << ", ";
     if (map_arg_type.find(vid) == map_arg_type.end()) {
       LOG(WARNING) << vid << " type not found\n";
-      PrintTypeAWS(v.type(), this->stream);
+      CodeGenHLSC::PrintTypeAWS(v.type(), this->stream);
       this->stream << ' ' << vid;
     }
     else {
       auto arg = map_arg_type[vid];
-      PrintTypeAWS(std::get<1>(arg), this->stream);
+      CodeGenHLSC::PrintTypeAWS(std::get<1>(arg), this->stream);
       this->stream << ' ' << std::get<0>(arg);
       const BufferNode* buf = f->api_args[i].as<BufferNode>();
       if (v.type().is_handle() && buf) {
@@ -106,6 +106,50 @@ void CodeGenHLSC::AddFunctionAWS(LoweredFunc f,
   this->PrintIndent();
   this->stream << "}\n\n";
 }
+
+void CodeGenHLSC::PrintTypeAWS(Type t, std::ostream& os) {
+  if (t.is_uint() || t.is_int() || t.is_fixed() || t.is_ufixed()) {
+    if (t.is_uint()) {
+      if (t.bits() > 32 && t.bits() < 64) {
+          os << "ap_uint<" << "64" << ">";
+        } else if (t.bits() > 16 && t.bits() < 32) {
+          os << "ap_uint<" << "32" << ">";
+        } else {
+        os << "ap_uint<" << t.bits() << ">";
+      }
+    } 
+    else if (t.is_int()) {
+      if (t.bits() > 32 && t.bits() < 64) {
+          os << "ap_int" << "64" << ">";
+        } else if (t.bits() > 16 && t.bits() < 32) {
+          os << "ap_int" << "32" << ">";
+        } else {
+        os << "ap_int<" << t.bits() << ">";
+      }
+    }
+    else if (t.is_ufixed()) {
+      // if (t.bits() > 32 && t.bits() < 64) {
+      //     os << "ap_ufixed<" << "64" << ">";
+      //   } else if (t.bits() > 16 && t.bits() < 32) {
+      //     os << "ap_ufixed<" << "32" << ">"; 
+      //   } else {
+        os << "ap_ufixed<" << t.bits() << ", " << t.bits() - t.fracs() << ">";
+      // }
+    }
+    else {
+      // if (t.bits() > 32 && t.bits() < 64) {
+      //     os << "ap_fixed<" << "64" << ">";
+      //   } else if (t.bits() > 16 && t.bits() < 32) {
+      //     os << "ap_fixed<" << "32" << ">";
+      //   } else {
+        os << "ap_fixed<" << t.bits() << ", " << t.bits() - t.fracs() << ">";
+      // }
+    }     
+  } else {
+    CodeGenC::PrintType(t, os);
+  }
+}
+
 
 
 

@@ -20,7 +20,6 @@ class CodeGenAWSHLS final : public CodeGenHLSC {
  public:
   void AddFunction(LoweredFunc f, str2tupleMap<std::string, Type> map_arg_type);
   void PrintType(Type t, std::ostream& os) override;
-
   void VisitExpr_(const GetBit* op, std::ostream& os) override;
   void VisitExpr_(const GetSlice* op, std::ostream& os) override;
 
@@ -29,7 +28,6 @@ class CodeGenAWSHLS final : public CodeGenHLSC {
   void VisitStmt_(const Partition* op) override;
   void VisitStmt_(const Stencil* op) override;
  private:
-  void PrintTypeAWS(Type t, std::ostream& os);
   std::ofstream soda_header_;
 };
 

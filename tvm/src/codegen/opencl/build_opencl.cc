@@ -1,10 +1,8 @@
 #include "./codegen_aocl.h"
 #include "./codegen_sdaccel.h"
-#include "./codegen_aws.h"
 #include "../build_common.h"
 #include "./sdaccel_module.h"
 #include "./aocl_module.h"
-#include "./aws_module.h"
 
 namespace TVM {
 namespace codegen {

@@ -688,8 +688,8 @@ class AOCLModuleNode final : public ModuleNode {
         std::vector<size_t> arg_sizes;
         std::vector<TVMType> arg_types;
         std::vector<int> shmids;
-        CollectArgInfo(args, func_, arg_sizes, arg_types);
-        GenSharedMem(args, shmids, arg_sizes);
+        // CollectArgInfo(args, func_, arg_sizes, arg_types);
+        // GenSharedMem(args, shmids, arg_sizes);
         LOG(CLEAN) << "Creating a Host file for AOCL Runtime ...";
 
         GenHostCode(args, shmids, arg_types, func_, test_file_);

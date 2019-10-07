@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "./codegen_vhls.h"
+#include "./codegen_aws.h"
 #include "../build_common.h"
 #include "../build_soda.h"
 #include "../codegen_soda.h"
@@ -44,61 +44,6 @@ void CodeGenAWSHLS::PrintType(Type t, std::ostream& os) {
   }
 }
 
-void CodeGenAWSHLS::PrintTypeAWS(Type t, std::ostream& os) {
-  if (t.is_uint() || t.is_int() || t.is_fixed() || t.is_ufixed()) {
-
-    if (t.is_uint()) {
-      if {
-        if (t.bits() > 32 && t.bits() < 64) {
-          os << "ap_uint<" << "64" << ">";
-        }
-        else if (t.bits() > 16 && t.bits() < 32) {
-          os << "ap_uint<" << "32" << ">";
-        }
-      } else {
-        os << "ap_uint<" << t.bits() << ">";
-      }
-    } 
-    else if (t.is_int()) {
-      if {
-        if (t.bits() > 32 && t.bits() < 64) {
-          os << "ap_int" << "64" << ">";
-        }
-        else if (t.bits() > 16 && t.bits() < 32) {
-          os << "ap_int" << "32" << ">";
-        }
-      } else {
-        os << "ap_int<" << t.bits() << ">";
-      }
-    }
-    else if (t.is_ufixed()) {
-      if {
-        if (t.bits() > 32 && t.bits() < 64) {
-          os << "ap_ufixed<" << "64" << ">";
-        }
-        else if (t.bits() > 16 && t.bits() < 32){
-          os << "ap_ufixed<" << "32" << ">"; 
-        }
-      } else {
-        os << "ap_ufixed<" << t.bits() << ">";
-      }
-    }
-    else {
-      if {
-        if (t.bits() > 32 && t.bits() < 64) {
-          os << "ap_fixed<" << "64" << ">";
-        }
-        else if (t.bits() > 16 && t.bits() < 32) {
-          os << "ap_fixed<" << "32" << ">";
-        }
-      } else {
-        os << "ap_fixed<" << t.bits() << ">";
-      }
-    }     
-  } else {
-    CodeGenC::PrintType(t, os);
-  }
-}
 
 void CodeGenAWSHLS::VisitExpr_(const GetBit* op, std::ostream& os) {
   PrintExpr(op->a, os);

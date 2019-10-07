@@ -8,7 +8,7 @@
 namespace TVM {
 namespace runtime {
 
-Module CreateAWSModule(
+Module CreateAWSHLSModule(
     LoweredFunc func,
     std::string code);
 
