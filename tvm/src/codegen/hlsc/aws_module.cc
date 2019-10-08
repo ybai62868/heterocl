@@ -100,10 +100,6 @@ inline std::string Type2ExtStr(TVMType t) {
   return str;
 }
 
-
-
-
-
 inline std::string Type2Byte(TVMType t) {
   std::string str = "";
   if (t.code == kDLFloat) {
@@ -384,46 +380,44 @@ void GenHostCode(TVMArgs& args,
 
 
 
-  PrintIndent(stream, indent);
-  // TODO
-  stream << "// create space for the result\n";
-  PrintIndent(stream, indent);
-  stream << "bit4_t* results = new bit4_t[NUM_TEST];\n";
+  // PrintIndent(stream, indent);
+  // stream << "// create space for the result\n";
+  // PrintIndent(stream, indent);
+  // int cnt_index = args.size() - 1;
+  // stream << Type2Byte(arg_types[cnt_index]) << "* arg_top_" << cnt_index;
+  // stream << " = new " << Type2Byte(arg_types[cnt_index]);
+  // TVMArray* arr = args[cnt_index];
+  // for (int j = 0;j < arr->ndim;j++) {
+  //   if (j==0) {
+  //     stream << "[" << arr->shape[j] << " ";
+  //   } else {
+  //     stream << "* " << arr->shape[j];
+  //   }
+  // }
+  // stream << "];\n";
+
+
+
   PrintIndent(stream, indent);
   stream << "// create mem objects\n";
-  for (int i = 0;i < 1;i++) {
-    PrintIndent(stream, indent);
-    stream << "CLMemObj training_mem";
-    stream << " ( (void *)training_data, sizeof(digit), NUM_TRAINING * 10, CL_MEM_READ_WRITE;\n";
-  }
-  for (int i = 0;i < 1;i++) {
-    PrintIndent(stream, indent);
-    stream << "CLMemObj testing_data" << i;
-    stream << " ( (void *)testing_data, sizeof(digit), NUM_TEST, CL_MEM_READ_ONLY;\n";
-  }
-  for (int i = 0;i < 1;i++) {
-    PrintIndent(stream, indent);
-    stream << "CLMemObj result_mem" << i;
-    stream << " ( (void *)results, sizeof(bit4_t), NUM_TEST, CL_MEM_WRITE_ONLY;\n";
-  }
-
-  for (int i = 0;i < args.size();i++) {
+  PrintIndent(stream, indent);
+  stream << "CLMemObj source_0((void*)arg_top_0, sizeof(uint64_t), 180, CL_MEM_READ_WRITE);\n";
+  for (int i = 1;i < args.size();i++) {
     PrintIndent(stream, indent);
     stream << "CLMemObj source_" << i;
-    stream << "((void*)arg_top" << i;
+    stream << "((void*)arg_top_" << i;
     stream << ", sizeof(" << Type2Byte(arg_types[i]) << "), ";
-  //   TVMArray* arr = args[i];
-  //   for (int j = 0;j < arr->ndim;j++) {
-  //     if (j==0) {
-  //       stream << arr->shape[j] << " ";
-  //     } else {
-  //       stream << "*" << arr->shape[j];
-  //     }
-  //   }
-  //   stream << ", CL_MEM_READ_WRITE);\n";
-  // }
+    TVMArray* arr = args[i];
+    for (int j = 0;j < arr->ndim;j++) {
+      if (j==0) {
+        stream << arr->shape[j] << " ";
+      } else {
+        stream << "* " << arr->shape[j];
+      }
+    }
+    stream << ", ";
+    stream << "CL_MEM_READ_WRITE);\n";
   }
-
 
 
   stream << "\n\n";
@@ -602,10 +596,10 @@ class AWSHLSModuleNode final : public ModuleNode {
         LOG(CLEAN) << "Compiling the generated AWS HLS code ...";
         // system("g++ main.cpp -o out");
         LOG(CLEAN) << "Running Software simulation ...";
-        // system("./out");
+        system("source run_sw.sh");
         LOG(CLEAN) << "Finished Software simulation";
         // system("rm out main.cpp");
-        // FreeSharedMem(args, shmids, arg_sizes);
+        FreeSharedMem(args, shmids, arg_sizes);
       });
   }
 
