@@ -186,7 +186,7 @@ void PrintCopy(TVMArray* arr,
       //   stream << "[i" << j << "]"; 
       // }
 
-      stream << "arg_top" << nth_arr;
+      stream << "arg_top_" << nth_arr;
       stream << "[i" << arr->ndim-1;
       int mul2 = 1;
       for (int j = arr->ndim-2; j >= 0; j--) {
@@ -243,10 +243,19 @@ void PrintCopyBack(TVMArray* arr,
       // stream << Type2ExtStr(arr->dtype);
       stream << Type2Byte(arr->dtype);
       stream << ")(arg_top_" << nth_arr;
-      for (int j = 0; j < arr->ndim; j++) {
-        stream << "[i" << j << "]"; 
+      stream << "[i" << arr->ndim-1;
+      int mul2 = 1;
+      for (int j = arr->ndim-2; j >= 0; j--) {
+        mul2 *= arr->shape[j+1];
+        stream << " + i" << j << "*" << mul2;
       }
-      stream << ")";
+
+      stream << "])";
+
+      // for (int j = 0; j < arr->ndim; j++) {
+      //   stream << "[i" << j << "]"; 
+      // }
+      // stream << ")";
       if (arr->dtype.fracs > 0)
         stream << " << " << static_cast<int>(arr->dtype.fracs);
       stream << ";\n";
@@ -267,6 +276,7 @@ void GenHostCode(TVMArgs& args,
   int indent = 0;
   std::ofstream stream;
   stream.open("digit_recognition.cpp");
+  // stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
   stream << "#include <sys/ipc.h>\n";
   stream << "#include <sys/shm.h>\n";
   stream << "\n\n";
@@ -283,12 +293,12 @@ void GenHostCode(TVMArgs& args,
   stream << "#include \"CLKernel.h\"\n";
   stream << "#include \"CLMemObj.h\"\n";
   stream << "// harness namespace\n";
-  stream << "using namespace rosetta\n";
+  stream << "using namespace rosetta;\n";
   stream << "\n\n";
   stream << "//other headers\n";
   stream << "#include \"utils.h\"\n";
   stream << "#include \"typedefs.h\"\n";
-  stream << "#include \"check_data.h\"\n";
+  //stream << "#include \"check_data.h\"\n";
   stream << "\n\n";
   stream << "// data\n";
   stream << "#include \"training_data.h\"\n";
@@ -309,9 +319,17 @@ void GenHostCode(TVMArgs& args,
       // stream << Type2Str(arg_types[i]) << " ";
       stream << "arg_top_" << i;
       TVMArray* arr = args[i];
-      for (int j = 0; j < arr->ndim; j++)
-        stream << "[" << arr->shape[j] << "]";
-      stream << ";\n";
+      stream << "[";
+      for (int j = 0; j < arr->ndim; j++) {
+        //stream << "[" << arr->shape[j] << "]";
+        if (j == arr->ndim-1) {
+          stream << arr->shape[j];
+        } else {
+          stream << arr->shape[j];
+          stream << " * ";
+        }
+      }
+      stream << "];\n";
       // copy from shared mem
       PrintCopy(arr, stream, indent, i);
     } else {
@@ -351,7 +369,7 @@ void GenHostCode(TVMArgs& args,
   PrintIndent(stream, indent);
   stream << "// parse command line arguments for opencl version\n";
   PrintIndent(stream, indent);
-  stream << "std::string kernelFile("");\n";
+  stream << "std::string kernelFile(\"\");\n";
   PrintIndent(stream, indent);
   stream << "parse_sdaccel_command_line_args(argc, argv, kernelFile);\n";
   stream << "\n\n";
@@ -364,7 +382,7 @@ void GenHostCode(TVMArgs& args,
   PrintIndent(stream, indent);
   stream << "// create OpenCL world\n";
   PrintIndent(stream, indent);
-  stream << "CLWorld digit_rec_world = CLword(TARGET_DEVICE, CL_DEVICE_TYPE_ACCELERATOR);\n";
+  stream << "CLWorld digit_rec_world = CLWorld(TARGET_DEVICE, CL_DEVICE_TYPE_ACCELERATOR);\n";
   stream << "\n\n";
   PrintIndent(stream, indent);
   stream << "// add the bitstream file\n";
@@ -441,7 +459,7 @@ void GenHostCode(TVMArgs& args,
   PrintIndent(stream, indent);
   stream << "DigitRec.set_global(global_size);\n";
   PrintIndent(stream, indent);
-  stream << "Digit.set_local(local_size);\n";
+  stream << "DigitRec.set_local(local_size);\n";
   stream << "\n\n";
   PrintIndent(stream, indent);
   stream << "// add them to the world\n";
@@ -488,8 +506,8 @@ void GenHostCode(TVMArgs& args,
   stream << "// cleanup\n";
   PrintIndent(stream, indent);
   stream << "digit_rec_world.releaseWorld();\n";
-  PrintIndent(stream, indent);
-  stream << "delete []results;\n";
+  // PrintIndent(stream, indent);
+  //stream << "delete []results;\n";
 
   stream << "}\n";
   stream.close();
@@ -596,7 +614,7 @@ class AWSHLSModuleNode final : public ModuleNode {
         LOG(CLEAN) << "Compiling the generated AWS HLS code ...";
         // system("g++ main.cpp -o out");
         LOG(CLEAN) << "Running Software simulation ...";
-        system("source run_sw.sh");
+        system("source ./run_sw.sh");
         LOG(CLEAN) << "Finished Software simulation";
         // system("rm out main.cpp");
         FreeSharedMem(args, shmids, arg_sizes);
