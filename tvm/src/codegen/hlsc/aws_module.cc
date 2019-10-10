@@ -268,6 +268,91 @@ void PrintCopyBack(TVMArray* arr,
   }
 }
 
+
+void PrintCopy2(TVMArray* arr, 
+               std::ofstream& stream, 
+               int indent, size_t nth_arr) {
+  for (int i = 0; i < arr->ndim; i++) {
+    PrintIndent(stream, indent);
+    stream << "for (size_t i" << i << " = 0; ";
+    stream << "i" << i << " < " << arr->shape[i] << "; ";
+    stream << "i" << i << "++) {\n";
+    indent += 2;
+    if (i == arr->ndim-1) {
+      PrintIndent(stream, indent);
+      stream << "arg_top_" << nth_arr;
+      for (int j = 0; j < arr->ndim; j++) {
+        stream << "[i" << j << "]"; 
+      }
+      stream << " = (";
+      stream << Type2ExtStr(arr->dtype);
+      stream << ")(arg_" << nth_arr;
+      stream << "[i" << arr->ndim-1;
+      int mul = 1;
+      for (int j = arr->ndim-2; j >= 0; j--) {
+        mul *= arr->shape[j+1];
+        stream << " + i" << j << "*" << mul;
+      }
+      stream << "])";
+      if (arr->dtype.fracs > 0)
+        stream << " >> " << static_cast<int>(arr->dtype.fracs);
+      stream << ";\n";
+    }
+  }
+  for (int i = 0; i < arr->ndim; i++) {
+    indent -= 2;
+    PrintIndent(stream, indent);
+    stream << "}\n";
+  }
+}
+
+
+void PrintCopyBack2(TVMArray* arr, 
+                   std::ofstream& stream, 
+                   int indent, size_t nth_arr) {
+  for (int i = 0; i < arr->ndim; i++) {
+    PrintIndent(stream, indent);
+    stream << "for (size_t i" << i << " = 0; ";
+    stream << "i" << i << " < " << arr->shape[i] << "; ";
+    stream << "i" << i << "++) {\n";
+    indent += 2;
+    if (i == arr->ndim-1) {
+      PrintIndent(stream, indent);
+      stream << "arg_" << nth_arr;
+      stream << "[i" << arr->ndim-1;
+      int mul = 1;
+      for (int j = arr->ndim-2; j >= 0; j--) {
+        mul *= arr->shape[j+1];
+        stream << " + i" << j << "*" << mul;
+      }
+      stream << "] = (";
+      // stream << Type2ExtStr(arr->dtype);
+      stream << Type2Byte(arr->dtype);
+      stream << ")(arg_top_" << nth_arr;
+      for (int j = 0; j < arr->ndim; j++) {
+        stream << "[i" << j << "]"; 
+      }
+      stream << ")";
+      if (arr->dtype.fracs > 0)
+        stream << " << " << static_cast<int>(arr->dtype.fracs);
+      stream << ";\n";
+    }
+  }
+  for (int i = 0; i < arr->ndim; i++) {
+    indent -= 2;
+    PrintIndent(stream, indent);
+    stream << "}\n";
+  }
+}
+
+
+
+
+
+
+
+
+
 void GenHostCode(TVMArgs& args,
                  const std::vector<int>& shmids,
                  const std::vector<TVMType>& arg_types,
@@ -275,8 +360,8 @@ void GenHostCode(TVMArgs& args,
                  std::string test_file) {
   int indent = 0;
   std::ofstream stream;
-  stream.open("digit_recognition.cpp");
-  // stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
+  // stream.open("digit_recognition.cpp");
+  stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
   stream << "#include <sys/ipc.h>\n";
   stream << "#include <sys/shm.h>\n";
   stream << "\n\n";
@@ -315,10 +400,12 @@ void GenHostCode(TVMArgs& args,
       stream << "(" << Type2Byte(arg_types[i]) << "*)";
       stream << "shmat(" << shmids[i] << ", nullptr, 0);\n";
       PrintIndent(stream, indent);
+
       stream << Type2Byte(arg_types[i]) << " ";
       // stream << Type2Str(arg_types[i]) << " ";
       stream << "arg_top_" << i;
       TVMArray* arr = args[i];
+
       stream << "[";
       for (int j = 0; j < arr->ndim; j++) {
         //stream << "[" << arr->shape[j] << "]";
@@ -330,8 +417,14 @@ void GenHostCode(TVMArgs& args,
         }
       }
       stream << "];\n";
+      // for (int j = 0;j < arr->ndim;j++) {
+      //   stream << "[" << arr->shape[j] << "]";
+      // }
+      // stream << ";\n";
       // copy from shared mem
       PrintCopy(arr, stream, indent, i);
+      // PrintCopy2(arr, stream, indent, i);
+
     } else {
       // directly assign the value to the variable
       PrintIndent(stream, indent);
@@ -415,16 +508,20 @@ void GenHostCode(TVMArgs& args,
   // stream << "];\n";
 
 
+  PrintIndent(stream, indent);
+  stream << "uint64_t foo[1] = {arg_top_0};\n";
 
   PrintIndent(stream, indent);
   stream << "// create mem objects\n";
   PrintIndent(stream, indent);
-  stream << "CLMemObj source_0((void*)arg_top_0, sizeof(uint64_t), 180, CL_MEM_READ_WRITE);\n";
+  stream << "CLMemObj source_0((void*)foo, sizeof(uint64_t), 1, CL_MEM_READ_WRITE);\n";
   for (int i = 1;i < args.size();i++) {
     PrintIndent(stream, indent);
     stream << "CLMemObj source_" << i;
     stream << "((void*)arg_top_" << i;
     stream << ", sizeof(" << Type2Byte(arg_types[i]) << "), ";
+    // stream << ", sizeof(" << Type2ExtStr(arg_types[i]) << "), ";
+
     TVMArray* arr = args[i];
     for (int j = 0;j < arr->ndim;j++) {
       if (j==0) {
@@ -444,7 +541,7 @@ void GenHostCode(TVMArgs& args,
   // TODO
   for (int i = 0;i < args.size();i++) {
     PrintIndent(stream, indent);
-    stream << "digit_rec_world.addMemObj(arg_top_" << i;
+    stream << "digit_rec_world.addMemObj(source_" << i;
     stream << ");\n";
   }
 
@@ -469,9 +566,11 @@ void GenHostCode(TVMArgs& args,
   PrintIndent(stream, indent);
   stream << "// set kernel arguments\n";
   // TODO
+  // PrintIndent(stream, indent);
+  // stream << "digit_rec_world.setConstKernelArg(0, 0, arg_top_0);\n";
   for (int i = 0;i < args.size();i++) {
     PrintIndent(stream, indent);
-    stream << "digit_rec_world.setMemKernelArg(0, 1, " << i;
+    stream << "digit_rec_world.setMemKernelArg(0, "<< i << ", " << i;
     stream << ");\n";
   }
 
@@ -485,7 +584,8 @@ void GenHostCode(TVMArgs& args,
   PrintIndent(stream, indent);
   stream << "// read the data back\n";
   // TODO
-
+  PrintIndent(stream, indent);
+  stream << "digit_rec_world.readMemObj(2);\n";
 
 
   // copy to shared mem
@@ -493,6 +593,7 @@ void GenHostCode(TVMArgs& args,
     if (args[i].type_code() == kArrayHandle) {
       TVMArray* arr = args[i];
       PrintCopyBack(arr, stream, indent, i);
+      // PrintCopyBack2(arr, stream, indent, i);
       PrintIndent(stream, indent);
       stream << "shmdt(";
       stream << "arg_" << i << ");\n";
@@ -503,11 +604,11 @@ void GenHostCode(TVMArgs& args,
 
   stream << "\n\n";
   PrintIndent(stream, indent);
-  stream << "// cleanup\n";
-  PrintIndent(stream, indent);
-  stream << "digit_rec_world.releaseWorld();\n";
+  // stream << "// cleanup\n";
   // PrintIndent(stream, indent);
-  //stream << "delete []results;\n";
+  // stream << "digit_rec_world.releaseWorld();\n";
+  // PrintIndent(stream, indent);
+  // stream << "delete []results;\n";
 
   stream << "}\n";
   stream.close();
