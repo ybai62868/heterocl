@@ -349,11 +349,13 @@ void GenWrapperCode(TVMArgs& args,
   stream << "\n\n";
   PrintIndent(stream, indent);
   for (int i = 0;i < args.size();i++) {
+    PrintIndent(stream, indent);
     stream << "#pragma HLS INTERFACE m_axi port= ";
     stream << "source_wrapper_" << i;
     stream << " offset=slave bundle=gmem\n";
   }
   for (int i = 0;i < args.size();i++) {
+    PrintIndent(stream, indent);
     stream << "#pragma HLS INTERFACE s_axilite port= ";
     stream << "source_wrapper_" << i;
     stream << " bundle=control\n";
@@ -475,9 +477,9 @@ void GenHostCode(TVMArgs& args,
                  std::string test_file) {
   int indent = 0;
   std::ofstream stream;
-  // stream.open("digit_recognition.cpp");
+  stream.open("digit_recognition.cpp");
   GenKernelCode(test_file);
-  stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
+  // stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
   stream << "#include <sys/ipc.h>\n";
   stream << "#include <sys/shm.h>\n";
   stream << "\n\n";
@@ -498,7 +500,7 @@ void GenHostCode(TVMArgs& args,
   stream << "\n\n";
   stream << "//other headers\n";
   stream << "#include \"utils.h\"\n";
-  stream << "#include \"typedefs.h\"\n";
+  // stream << "#include \"typedefs.h\"\n";
   stream << "int main(int argc, char ** argv) {\n";
   indent += 2;
 
@@ -681,8 +683,9 @@ void GenHostCode(TVMArgs& args,
   stream << "// read the data back\n";
   // TODO
   PrintIndent(stream, indent);
-  stream << "digit_rec_world.readMemObj(2);\n";
-
+  int read_index = args.size() - 1;
+  // stream << "digit_rec_world.readMemObj(2);\n";
+  stream << "digit_rec_world.readMemObj( " << read_index << " );\n";
 
   // copy to shared mem
   for (int i = 0; i < args.size(); i++) {
