@@ -477,9 +477,9 @@ void GenHostCode(TVMArgs& args,
                  std::string test_file) {
   int indent = 0;
   std::ofstream stream;
-  stream.open("digit_recognition.cpp");
+  // stream.open("digit_recognition.cpp");
   GenKernelCode(test_file);
-  // stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
+  stream.open("/home/centos/src/project_data/lab_digitrec_aws/solution/src/host/digit_recognition.cpp");
   stream << "#include <sys/ipc.h>\n";
   stream << "#include <sys/shm.h>\n";
   stream << "\n\n";
